@@ -55,16 +55,16 @@ Hiring engineers requires considerable engineering bandwidth and often produces 
 ## 🏗️ Architecture & Tech Stack
 
 ```mermaid
-graph TD
+flowchart TD
     Client["React 18 + Vite Frontend (Port 5173)"]
     Backend["Express 5 / Node.js Backend (Port 5000)"]
-    DB[(MongoDB Atlas / Local)]
+    DB[("MongoDB Atlas / Local")]
     AI1["Google Gemini AI"]
     AI2["Cohere AI"]
     Compiler["OneCompiler Code Engine"]
 
     Client <-->|REST API + CORS Credentials| Backend
-    Client <-->|Webcam / Face Mesh (TensorFlow.js)| Client
+    Client -->|On-Device Vision & Face Mesh via TensorFlow.js| Client
     Backend <-->|Mongoose Schemas| DB
     Backend <-->|Question Gen & Evaluation| AI1
     Backend <-->|Resume Parsing & Embeddings| AI2
