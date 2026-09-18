@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>InterviewPrep AI</title>
+    <meta
+      name="description"
+      content="InterviewPrep AI helps candidates practice interviews, track performance, and prepare with confidence."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0b1220" />
+
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230ea5e9'/%3E%3Cstop offset='100%25' stop-color='%233b82f6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='%230b1220'/%3E%3Cpath d='M18 43V21h10.5c8.3 0 13 4.5 13 11s-4.7 11-13 11H18Zm8-6h2.4c4.5 0 7.1-2.2 7.1-5s-2.6-5-7.1-5H26v10Z' fill='url(%23g)'/%3E%3Cpath d='M41 20h5v24h-5z' fill='%23e2e8f0'/%3E%3C/svg%3E"
+    />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='44' fill='%230b1220'/%3E%3Cpath d='M50 122V58h30c24 0 40 13 40 32s-16 32-40 32H50Zm24-17h5c12 0 19-5 19-15s-7-15-19-15h-5v30Z' fill='%230ea5e9'/%3E%3Cpath d='M128 56h14v68h-14z' fill='%23e2e8f0'/%3E%3C/svg%3E" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="InterviewPrep AI" />
+    <meta
+      property="og:description"
+      content="Practice interviews, review performance signals, and prepare with confidence."
+    />
+    <meta property="og:site_name" content="InterviewPrep AI" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="InterviewPrep AI" />
+    <meta
+      name="twitter:description"
+      content="Practice interviews, review performance signals, and prepare with confidence."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "InterviewPrep AI",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Practice interviews, review performance signals, and prepare with confidence."
+      }
+    </script>
+
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      html {
+        background:
+          radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 34%),
+          radial-gradient(circle at 85% 10%, rgba(59, 130, 246, 0.16), transparent 28%),
+          linear-gradient(180deg, #07111f 0%, #0b1220 48%, #111827 100%);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        background: transparent;
+        color: #e5eefc;
+      }
+
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .initial-loader {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        font-family: 'Space Grotesk', 'Inter', sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #f8fbff;
+        background:
+          radial-gradient(circle at top, rgba(14, 165, 233, 0.24), transparent 38%),
+          linear-gradient(180deg, rgba(7, 17, 31, 0.9), rgba(15, 23, 42, 0.95));
+      }
+
+      .initial-loader::before {
+        content: '';
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        background:
+          linear-gradient(135deg, rgba(14, 165, 233, 0.95), rgba(59, 130, 246, 0.9));
+        box-shadow: 0 16px 40px rgba(14, 165, 233, 0.28);
+        mask: radial-gradient(circle at 30% 60%, transparent 18px, #000 19px);
+      }
+
+      .initial-loader small {
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: rgba(229, 238, 252, 0.72);
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>
+      <div style="padding: 32px; font-family: Inter, sans-serif; color: #e5eefc; background: #0b1220; min-height: 100vh;">
+        <h1 style="margin: 0 0 12px; font-family: 'Space Grotesk', sans-serif; font-size: 2rem;">InterviewPrep AI</h1>
+        <p style="margin: 0; max-width: 42rem; line-height: 1.6; color: rgba(229, 238, 252, 0.78);">
+          Practice interviews, review performance signals, and prepare with confidence.
+          Enable JavaScript to open the full experience.
+        </p>
+      </div>
+    </noscript>
+
+    <div id="root">
+      <div class="initial-loader">
+        <div>Launching InterviewPrep AI</div>
+        <small>Preparing your interview workspace</small>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+

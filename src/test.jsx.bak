@@ -1,0 +1,989 @@
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// ─── DATA ───────────────────────────────────────────────────────────────────
+
+const QUESTIONS = {
+  easy: [
+    {
+      id: "e1", category: "Number Theory", difficulty: "Easy",
+      title: "Automorphic Number",
+      description: "Check if a given number is an Automorphic number. A number is called automorphic if its square ends with the same digits as the number itself.",
+      hints: ["Calculate the square of the number first.", "Use the modulo operator (%) with a power of 10 equal to the number of digits."],
+      testcases: [
+        { input: "5", output: "true (5²=25)" },
+        { input: "25", output: "true (25²=625)" },
+        { input: "76", output: "true (76²=5776)" },
+        { input: "10", output: "false" },
+        { input: "376", output: "true (376²=141376)" },
+      ],
+      defaultCode: {
+        javascript: `function isAutomorphic(n) {\n  const sq = n * n;\n  const digits = String(n).length;\n  return sq % (10 ** digits) === n;\n}\n\nconsole.log(isAutomorphic(5));   // true\nconsole.log(isAutomorphic(25));  // true\nconsole.log(isAutomorphic(76));  // true\nconsole.log(isAutomorphic(10));  // false`,
+        python: `def is_automorphic(n):\n    sq = n * n\n    digits = len(str(n))\n    return sq % (10 ** digits) == n\n\nprint(is_automorphic(5))   # True\nprint(is_automorphic(25))  # True\nprint(is_automorphic(76))  # True\nprint(is_automorphic(10))  # False`,
+        java: `public class Main {\n    public static boolean isAutomorphic(int n) {\n        long sq = (long) n * n;\n        int digits = String.valueOf(n).length();\n        return sq % (long) Math.pow(10, digits) == n;\n    }\n    public static void main(String[] args) {\n        System.out.println(isAutomorphic(5));  // true\n        System.out.println(isAutomorphic(76)); // true\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nbool isAutomorphic(int n) {\n    long long sq = (long long)n * n;\n    int d = to_string(n).length();\n    return sq % (long long)pow(10, d) == n;\n}\nint main() {\n    cout << isAutomorphic(5) << endl;  // 1\n    cout << isAutomorphic(10) << endl; // 0\n}`
+      }
+    },
+    {
+      id: "e2", category: "String Manipulation", difficulty: "Easy",
+      title: "Most Frequent Character",
+      description: "Given a string, find the most frequent character. If there is a tie, return any one of them.",
+      hints: ["Use a frequency map or array of size 256.", "Iterate through the map to find max count."],
+      testcases: [
+        { input: "'infosys'", output: "'s'" },
+        { input: "'apple'", output: "'p'" },
+        { input: "'banana'", output: "'a'" },
+        { input: "'mississippi'", output: "'i'" },
+        { input: "'engineering'", output: "'e'" },
+      ],
+      defaultCode: {
+        javascript: `function mostFrequent(s) {\n  const freq = {};\n  for (const c of s) freq[c] = (freq[c] || 0) + 1;\n  return Object.entries(freq).reduce((a, b) => b[1] > a[1] ? b : a)[0];\n}\n\nconsole.log(mostFrequent('infosys'));     // s\nconsole.log(mostFrequent('mississippi')); // i`,
+        python: `from collections import Counter\ndef most_frequent(s):\n    return Counter(s).most_common(1)[0][0]\n\nprint(most_frequent('infosys'))     # s\nprint(most_frequent('mississippi')) # i`,
+        java: `import java.util.*;\npublic class Main {\n    public static char mostFrequent(String s) {\n        Map<Character, Integer> m = new HashMap<>();\n        for (char c : s.toCharArray()) m.merge(c, 1, Integer::sum);\n        return Collections.max(m.entrySet(), Map.Entry.comparingByValue()).getKey();\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nchar mostFrequent(string s) {\n    map<char,int> freq;\n    for (char c : s) freq[c]++;\n    return max_element(freq.begin(), freq.end(),\n        [](auto& a, auto& b){ return a.second < b.second; })->first;\n}`
+      }
+    },
+    {
+      id: "e3", category: "Arrays", difficulty: "Easy",
+      title: "Circular Left Rotation",
+      description: "Given an array of integers, shift all elements one position to the left. The first element should move to the last position.",
+      hints: ["Store the first element in a temporary variable.", "Use a loop to move each element at index i to i-1."],
+      testcases: [
+        { input: "[1,2,3,4,5]", output: "[2,3,4,5,1]" },
+        { input: "[10,20]", output: "[20,10]" },
+        { input: "[7,8,9,10]", output: "[8,9,10,7]" },
+        { input: "[5,4,3,2,1]", output: "[4,3,2,1,5]" },
+        { input: "[1]", output: "[1]" },
+      ],
+      defaultCode: {
+        javascript: `function leftRotate(arr) {\n  const first = arr[0];\n  for (let i = 1; i < arr.length; i++) arr[i-1] = arr[i];\n  arr[arr.length - 1] = first;\n  return arr;\n}\n\nconsole.log(leftRotate([1,2,3,4,5])); // [2,3,4,5,1]\nconsole.log(leftRotate([10,20]));      // [20,10]`,
+        python: `def left_rotate(arr):\n    return arr[1:] + arr[:1]\n\nprint(left_rotate([1,2,3,4,5])) # [2,3,4,5,1]\nprint(left_rotate([10,20]))      # [20,10]`,
+        java: `public class Main {\n    public static int[] leftRotate(int[] arr) {\n        int first = arr[0];\n        for (int i = 1; i < arr.length; i++) arr[i-1] = arr[i];\n        arr[arr.length-1] = first;\n        return arr;\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nvector<int> leftRotate(vector<int> arr) {\n    rotate(arr.begin(), arr.begin()+1, arr.end());\n    return arr;\n}`
+      }
+    },
+    {
+      id: "e4", category: "Mathematics", difficulty: "Easy",
+      title: "GCD — Euclidean Algorithm",
+      description: "Calculate the GCD (Greatest Common Divisor) of two numbers using the Euclidean Algorithm.",
+      hints: ["GCD(a, b) = GCD(b, a % b).", "Continue until remainder is zero."],
+      testcases: [
+        { input: "12, 18", output: "6" },
+        { input: "48, 18", output: "6" },
+        { input: "7, 13", output: "1" },
+        { input: "81, 153", output: "9" },
+        { input: "30, 45", output: "15" },
+      ],
+      defaultCode: {
+        javascript: `function gcd(a, b) {\n  while (b !== 0) { [a, b] = [b, a % b]; }\n  return a;\n}\n\nconsole.log(gcd(12, 18)); // 6\nconsole.log(gcd(48, 18)); // 6\nconsole.log(gcd(7, 13));  // 1`,
+        python: `import math\ndef gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a\n\nprint(gcd(12, 18)) # 6\nprint(gcd(48, 18)) # 6`,
+        java: `public class Main {\n    public static int gcd(int a, int b) {\n        while (b != 0) { int t = b; b = a % b; a = t; }\n        return a;\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nint gcd(int a, int b) {\n    return b == 0 ? a : gcd(b, a % b);\n}`
+      }
+    }
+  ],
+  medium: [
+    {
+      id: "m1", category: "Greedy / Arrays", difficulty: "Medium",
+      title: "Monster Problem",
+      description: "You have initial experience E. There are N monsters with power P[i] and bonus B[i]. You can defeat a monster if E >= P[i]. Upon defeating, experience increases by B[i]. Find the maximum monsters you can defeat.",
+      hints: ["Sort monsters by power to maximize defeats.", "Greedily defeat the lowest-power monster first."],
+      testcases: [
+        { input: "E=10, P=[12,5], B=[10,5]", output: "2" },
+        { input: "E=123, P=[78,130], B=[10,0]", output: "1" },
+        { input: "E=5, P=[5,6,7], B=[1,1,1]", output: "3" },
+        { input: "E=100, P=[101], B=[100]", output: "0" },
+        { input: "E=1, P=[1,2,3], B=[1,1,1]", output: "3" },
+      ],
+      defaultCode: {
+        javascript: `function maxMonsters(E, P, B) {\n  const monsters = P.map((p,i) => [p, B[i]]).sort((a,b) => a[0]-b[0]);\n  let count = 0;\n  for (const [power, bonus] of monsters) {\n    if (E >= power) { E += bonus; count++; }\n  }\n  return count;\n}\n\nconsole.log(maxMonsters(10, [12,5], [10,5])); // 2\nconsole.log(maxMonsters(5, [5,6,7], [1,1,1])); // 3`,
+        python: `def max_monsters(E, P, B):\n    monsters = sorted(zip(P, B))\n    count = 0\n    for power, bonus in monsters:\n        if E >= power:\n            E += bonus\n            count += 1\n    return count\n\nprint(max_monsters(10, [12,5], [10,5])) # 2`,
+        java: `import java.util.*;\npublic class Main {\n    public static int maxMonsters(int E, int[] P, int[] B) {\n        int n = P.length;\n        Integer[] idx = new Integer[n];\n        for (int i=0;i<n;i++) idx[i]=i;\n        Arrays.sort(idx, (a,b)->P[a]-P[b]);\n        int count=0;\n        for (int i : idx) if (E>=P[i]) { E+=B[i]; count++; }\n        return count;\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nint maxMonsters(int E, vector<int>& P, vector<int>& B) {\n    int n=P.size();\n    vector<pair<int,int>> m(n);\n    for(int i=0;i<n;i++) m[i]={P[i],B[i]};\n    sort(m.begin(),m.end());\n    int cnt=0;\n    for(auto [p,b]:m) if(E>=p){E+=b;cnt++;}\n    return cnt;\n}`
+      }
+    },
+    {
+      id: "m2", category: "String Manipulation", difficulty: "Medium",
+      title: "Longest Substring K Distinct",
+      description: "Given a string, find the longest substring that contains at most K distinct characters.",
+      hints: ["Use the Sliding Window technique with a Hash Map.", "Expand right pointer; shrink left when distinct count exceeds K."],
+      testcases: [
+        { input: "s='eceba', k=2", output: "3 ('ece')" },
+        { input: "s='aabacbebebe', k=3", output: "7 ('cbebebe')" },
+        { input: "s='abc', k=1", output: "1" },
+        { input: "s='abaccc', k=2", output: "4 ('accc')" },
+        { input: "s='aaaaa', k=2", output: "5" },
+      ],
+      defaultCode: {
+        javascript: `function longestKDistinct(s, k) {\n  const map = new Map();\n  let l = 0, best = 0;\n  for (let r = 0; r < s.length; r++) {\n    map.set(s[r], (map.get(s[r]) || 0) + 1);\n    while (map.size > k) {\n      map.set(s[l], map.get(s[l]) - 1);\n      if (map.get(s[l]) === 0) map.delete(s[l]);\n      l++;\n    }\n    best = Math.max(best, r - l + 1);\n  }\n  return best;\n}\n\nconsole.log(longestKDistinct('eceba', 2));       // 3\nconsole.log(longestKDistinct('aabacbebebe', 3)); // 7`,
+        python: `from collections import defaultdict\ndef longest_k_distinct(s, k):\n    freq = defaultdict(int)\n    l = best = 0\n    for r, c in enumerate(s):\n        freq[c] += 1\n        while len(freq) > k:\n            freq[s[l]] -= 1\n            if freq[s[l]] == 0: del freq[s[l]]\n            l += 1\n        best = max(best, r - l + 1)\n    return best`,
+        java: `import java.util.*;\npublic class Main {\n    public static int longestKDistinct(String s, int k) {\n        Map<Character,Integer> m = new HashMap<>();\n        int l=0, best=0;\n        for (int r=0;r<s.length();r++) {\n            m.merge(s.charAt(r),1,Integer::sum);\n            while(m.size()>k){char c=s.charAt(l++);if(m.merge(c,-1,Integer::sum)==0)m.remove(c);}\n            best=Math.max(best,r-l+1);\n        }\n        return best;\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nint longestKDistinct(string s, int k) {\n    unordered_map<char,int> m;\n    int l=0,best=0;\n    for(int r=0;r<s.size();r++){\n        m[s[r]]++;\n        while((int)m.size()>k) if(--m[s[l++]]==0) m.erase(s[l-1]);\n        best=max(best,r-l+1);\n    }\n    return best;\n}`
+      }
+    },
+    {
+      id: "m3", category: "Searching / Arrays", difficulty: "Medium",
+      title: "Search in Rotated Sorted Array",
+      description: "Given a sorted array rotated at some pivot, find the index of target in O(log n) time.",
+      hints: ["Use Binary Search — one half is always sorted.", "Check which half contains the target."],
+      testcases: [
+        { input: "[4,5,6,7,0,1,2], t=0", output: "4" },
+        { input: "[4,5,6,7,0,1,2], t=3", output: "-1" },
+        { input: "[1,3], t=3", output: "1" },
+        { input: "[5,1,3], t=5", output: "0" },
+        { input: "[4,5,6,1,2,3], t=6", output: "2" },
+      ],
+      defaultCode: {
+        javascript: `function search(nums, target) {\n  let l = 0, r = nums.length - 1;\n  while (l <= r) {\n    const m = (l + r) >> 1;\n    if (nums[m] === target) return m;\n    if (nums[l] <= nums[m]) {\n      if (nums[l] <= target && target < nums[m]) r = m - 1;\n      else l = m + 1;\n    } else {\n      if (nums[m] < target && target <= nums[r]) l = m + 1;\n      else r = m - 1;\n    }\n  }\n  return -1;\n}\n\nconsole.log(search([4,5,6,7,0,1,2], 0)); // 4\nconsole.log(search([4,5,6,7,0,1,2], 3)); // -1`,
+        python: `def search(nums, target):\n    l, r = 0, len(nums)-1\n    while l <= r:\n        m = (l+r)//2\n        if nums[m] == target: return m\n        if nums[l] <= nums[m]:\n            if nums[l] <= target < nums[m]: r = m-1\n            else: l = m+1\n        else:\n            if nums[m] < target <= nums[r]: l = m+1\n            else: r = m-1\n    return -1`,
+        java: `public class Main {\n    public static int search(int[] nums, int target) {\n        int l=0,r=nums.length-1;\n        while(l<=r){\n            int m=(l+r)/2;\n            if(nums[m]==target) return m;\n            if(nums[l]<=nums[m]){if(nums[l]<=target&&target<nums[m])r=m-1;else l=m+1;}\n            else{if(nums[m]<target&&target<=nums[r])l=m+1;else r=m-1;}\n        }\n        return -1;\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nint search(vector<int>& nums, int target){\n    int l=0,r=nums.size()-1;\n    while(l<=r){\n        int m=(l+r)/2;\n        if(nums[m]==target) return m;\n        if(nums[l]<=nums[m]){if(nums[l]<=target&&target<nums[m])r=m-1;else l=m+1;}\n        else{if(nums[m]<target&&target<=nums[r])l=m+1;else r=m-1;}\n    }\n    return -1;\n}`
+      }
+    },
+    {
+      id: "m4", category: "Mathematical / Logic", difficulty: "Medium",
+      title: "Grid Unique Paths",
+      description: "A robot at top-left of an M×N grid can only move Down or Right. How many unique paths to bottom-right corner?",
+      hints: ["DP: paths to (i,j) = paths to (i-1,j) + paths to (i,j-1).", "Or use Combinatorics: C(M+N-2, M-1)."],
+      testcases: [
+        { input: "m=3, n=7", output: "28" },
+        { input: "m=3, n=2", output: "3" },
+        { input: "m=3, n=3", output: "6" },
+        { input: "m=1, n=1", output: "1" },
+        { input: "m=4, n=4", output: "20" },
+      ],
+      defaultCode: {
+        javascript: `function uniquePaths(m, n) {\n  const dp = Array(m).fill(null).map(() => Array(n).fill(1));\n  for (let i = 1; i < m; i++)\n    for (let j = 1; j < n; j++)\n      dp[i][j] = dp[i-1][j] + dp[i][j-1];\n  return dp[m-1][n-1];\n}\n\nconsole.log(uniquePaths(3, 7)); // 28\nconsole.log(uniquePaths(3, 3)); // 6`,
+        python: `def unique_paths(m, n):\n    dp = [[1]*n for _ in range(m)]\n    for i in range(1, m):\n        for j in range(1, n):\n            dp[i][j] = dp[i-1][j] + dp[i][j-1]\n    return dp[m-1][n-1]\n\nprint(unique_paths(3,7)) # 28`,
+        java: `public class Main {\n    public static int uniquePaths(int m, int n) {\n        int[][] dp = new int[m][n];\n        for (int[] r : dp) Arrays.fill(r, 1);\n        for (int i=1;i<m;i++) for(int j=1;j<n;j++) dp[i][j]=dp[i-1][j]+dp[i][j-1];\n        return dp[m-1][n-1];\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nint uniquePaths(int m, int n){\n    vector<vector<int>> dp(m,vector<int>(n,1));\n    for(int i=1;i<m;i++) for(int j=1;j<n;j++) dp[i][j]=dp[i-1][j]+dp[i][j-1];\n    return dp[m-1][n-1];\n}`
+      }
+    }
+  ],
+  hard: [
+    {
+      id: "h1", category: "Dynamic Programming", difficulty: "Hard",
+      title: "Longest Increasing Subsequence",
+      description: "Given an integer array, return the length of the longest strictly increasing subsequence. Aim for O(n log n) solution.",
+      hints: ["Maintain 'tails' array for O(n log n).", "Use binary search to find insertion point in tails."],
+      testcases: [
+        { input: "[10,9,2,5,3,7,101,18]", output: "4" },
+        { input: "[0,1,0,3,2,3]", output: "4" },
+        { input: "[7,7,7,7]", output: "1" },
+        { input: "[1,2,3,4,5]", output: "5" },
+        { input: "[3,10,2,1,20]", output: "3" },
+      ],
+      defaultCode: {
+        javascript: `function lengthOfLIS(nums) {\n  const tails = [];\n  for (const n of nums) {\n    let l = 0, r = tails.length;\n    while (l < r) {\n      const m = (l + r) >> 1;\n      if (tails[m] < n) l = m + 1; else r = m;\n    }\n    tails[l] = n;\n  }\n  return tails.length;\n}\n\nconsole.log(lengthOfLIS([10,9,2,5,3,7,101,18])); // 4\nconsole.log(lengthOfLIS([0,1,0,3,2,3]));          // 4`,
+        python: `import bisect\ndef length_of_lis(nums):\n    tails = []\n    for n in nums:\n        pos = bisect.bisect_left(tails, n)\n        if pos == len(tails): tails.append(n)\n        else: tails[pos] = n\n    return len(tails)\n\nprint(length_of_lis([10,9,2,5,3,7,101,18])) # 4`,
+        java: `import java.util.*;\npublic class Main {\n    public static int lengthOfLIS(int[] nums) {\n        List<Integer> tails = new ArrayList<>();\n        for (int n : nums) {\n            int pos = Collections.binarySearch(tails, n);\n            if (pos < 0) pos = -(pos+1);\n            if (pos == tails.size()) tails.add(n);\n            else tails.set(pos, n);\n        }\n        return tails.size();\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nint lengthOfLIS(vector<int>& nums){\n    vector<int> tails;\n    for(int n:nums){\n        auto it=lower_bound(tails.begin(),tails.end(),n);\n        if(it==tails.end()) tails.push_back(n);\n        else *it=n;\n    }\n    return tails.size();\n}`
+      }
+    },
+    {
+      id: "h2", category: "Graphs", difficulty: "Hard",
+      title: "Network Delay Time",
+      description: "Given a network of n nodes and directed edges with travel times, find the minimum time for all nodes to receive a signal from node k. Return -1 if impossible.",
+      hints: ["Single-source shortest path → Dijkstra's Algorithm.", "Use Min-Priority Queue; answer is max of distance array."],
+      testcases: [
+        { input: "times=[[2,1,1],[2,3,1],[3,4,1]], n=4, k=2", output: "2" },
+        { input: "times=[[1,2,1]], n=2, k=1", output: "1" },
+        { input: "times=[[1,2,1]], n=2, k=2", output: "-1" },
+        { input: "times=[[1,2,1],[2,3,2],[1,3,4]], n=3, k=1", output: "3" },
+        { input: "times=[[1,2,1],[2,3,10]], n=3, k=1", output: "11" },
+      ],
+      defaultCode: {
+        javascript: `function networkDelayTime(times, n, k) {\n  const graph = Array.from({length: n+1}, () => []);\n  for (const [u,v,w] of times) graph[u].push([v,w]);\n  const dist = Array(n+1).fill(Infinity);\n  dist[k] = 0;\n  const pq = [[0, k]];\n  while (pq.length) {\n    const [d, u] = pq.shift();\n    if (d > dist[u]) continue;\n    for (const [v, w] of graph[u]) {\n      if (dist[u]+w < dist[v]) {\n        dist[v] = dist[u]+w;\n        pq.push([dist[v], v]);\n        pq.sort((a,b) => a[0]-b[0]);\n      }\n    }\n  }\n  const max = Math.max(...dist.slice(1));\n  return max === Infinity ? -1 : max;\n}\n\nconsole.log(networkDelayTime([[2,1,1],[2,3,1],[3,4,1]], 4, 2)); // 2`,
+        python: `import heapq\nfrom collections import defaultdict\ndef network_delay_time(times, n, k):\n    graph = defaultdict(list)\n    for u,v,w in times: graph[u].append((v,w))\n    dist = {i: float('inf') for i in range(1,n+1)}\n    dist[k] = 0\n    pq = [(0, k)]\n    while pq:\n        d, u = heapq.heappop(pq)\n        if d > dist[u]: continue\n        for v, w in graph[u]:\n            if dist[u]+w < dist[v]:\n                dist[v] = dist[u]+w\n                heapq.heappush(pq,(dist[v],v))\n    ans = max(dist.values())\n    return ans if ans < float('inf') else -1`,
+        java: `import java.util.*;\npublic class Main {\n    public static int networkDelayTime(int[][] times, int n, int k) {\n        Map<Integer,List<int[]>> g=new HashMap<>();\n        for(int[] t:times) g.computeIfAbsent(t[0],x->new ArrayList<>()).add(new int[]{t[1],t[2]});\n        int[] dist=new int[n+1]; Arrays.fill(dist,Integer.MAX_VALUE); dist[k]=0;\n        PriorityQueue<int[]> pq=new PriorityQueue<>((a,b)->a[0]-b[0]);\n        pq.offer(new int[]{0,k});\n        while(!pq.isEmpty()){int[]cur=pq.poll();int d=cur[0],u=cur[1];if(d>dist[u])continue;for(int[]e:g.getOrDefault(u,new ArrayList<>())){if(dist[u]+e[1]<dist[e[0]]){dist[e[0]]=dist[u]+e[1];pq.offer(new int[]{dist[e[0]],e[0]});}}}\n        int max=0;for(int i=1;i<=n;i++){if(dist[i]==Integer.MAX_VALUE)return -1;max=Math.max(max,dist[i]);}return max;\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nint networkDelayTime(vector<vector<int>>& times, int n, int k){\n    vector<vector<pair<int,int>>> g(n+1);\n    for(auto& t:times) g[t[0]].push_back({t[1],t[2]});\n    vector<int> dist(n+1,INT_MAX); dist[k]=0;\n    priority_queue<pair<int,int>,vector<pair<int,int>>,greater<>> pq;\n    pq.push({0,k});\n    while(!pq.empty()){auto[d,u]=pq.top();pq.pop();if(d>dist[u])continue;for(auto[v,w]:g[u])if(dist[u]+w<dist[v]){dist[v]=dist[u]+w;pq.push({dist[v],v});}}\n    int mx=*max_element(dist.begin()+1,dist.end());\n    return mx==INT_MAX?-1:mx;\n}`
+      }
+    },
+    {
+      id: "h3", category: "String Manipulation", difficulty: "Hard",
+      title: "Palindrome Partitioning — Min Cuts",
+      description: "Given string s, partition it so every substring is a palindrome. Return the minimum cuts needed.",
+      hints: ["Pre-compute a 2D isPalin[i][j] array in O(n²).", "dp[i] = min cuts for prefix s[0..i]."],
+      testcases: [
+        { input: "'aab'", output: "1" },
+        { input: "'a'", output: "0" },
+        { input: "'racecar'", output: "0" },
+        { input: "'abcde'", output: "4" },
+        { input: "'noon'", output: "0" },
+      ],
+      defaultCode: {
+        javascript: `function minCut(s) {\n  const n = s.length;\n  const palin = Array.from({length:n}, () => Array(n).fill(false));\n  for (let i = n-1; i >= 0; i--)\n    for (let j = i; j < n; j++)\n      palin[i][j] = s[i]===s[j] && (j-i<2 || palin[i+1][j-1]);\n  const dp = Array(n).fill(Infinity);\n  for (let i = 0; i < n; i++) {\n    if (palin[0][i]) { dp[i] = 0; continue; }\n    for (let j = 1; j <= i; j++)\n      if (palin[j][i]) dp[i] = Math.min(dp[i], dp[j-1]+1);\n  }\n  return dp[n-1];\n}\n\nconsole.log(minCut('aab'));     // 1\nconsole.log(minCut('racecar')); // 0`,
+        python: `def min_cut(s):\n    n = len(s)\n    palin = [[False]*n for _ in range(n)]\n    for i in range(n-1,-1,-1):\n        for j in range(i,n):\n            palin[i][j] = s[i]==s[j] and (j-i<2 or palin[i+1][j-1])\n    dp = [float('inf')]*n\n    for i in range(n):\n        if palin[0][i]: dp[i]=0; continue\n        for j in range(1,i+1):\n            if palin[j][i]: dp[i]=min(dp[i],dp[j-1]+1)\n    return dp[-1]`,
+        java: `public class Main {\n    public static int minCut(String s) {\n        int n=s.length();\n        boolean[][] p=new boolean[n][n];\n        for(int i=n-1;i>=0;i--) for(int j=i;j<n;j++) p[i][j]=s.charAt(i)==s.charAt(j)&&(j-i<2||p[i+1][j-1]);\n        int[] dp=new int[n]; Arrays.fill(dp,Integer.MAX_VALUE);\n        for(int i=0;i<n;i++){if(p[0][i]){dp[i]=0;continue;}for(int j=1;j<=i;j++)if(p[j][i])dp[i]=Math.min(dp[i],dp[j-1]+1);}\n        return dp[n-1];\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nint minCut(string s){\n    int n=s.size();\n    vector<vector<bool>> p(n,vector<bool>(n,false));\n    for(int i=n-1;i>=0;i--) for(int j=i;j<n;j++) p[i][j]=s[i]==s[j]&&(j-i<2||p[i+1][j-1]);\n    vector<int> dp(n,INT_MAX);\n    for(int i=0;i<n;i++){if(p[0][i]){dp[i]=0;continue;}for(int j=1;j<=i;j++)if(p[j][i])dp[i]=min(dp[i],dp[j-1]+1);}\n    return dp[n-1];\n}`
+      }
+    },
+    {
+      id: "h4", category: "Arrays / Bitmasking", difficulty: "Hard",
+      title: "Maximum XOR of Two Numbers",
+      description: "Given an integer array nums, find the maximum result of nums[i] XOR nums[j] where 0 ≤ i ≤ j < n.",
+      hints: ["Use a Trie storing binary representation.", "For each number, greedily go opposite direction to maximize XOR."],
+      testcases: [
+        { input: "[3,10,5,25,2,8]", output: "28" },
+        { input: "[0]", output: "0" },
+        { input: "[2,4]", output: "6" },
+        { input: "[14,70,53,83,49,91,36,80,92,51]", output: "127" },
+        { input: "[5,25,30]", output: "31" },
+      ],
+      defaultCode: {
+        javascript: `function findMaximumXOR(nums) {\n  let max = 0, mask = 0;\n  for (let i = 31; i >= 0; i--) {\n    mask |= (1 << i);\n    const prefixes = new Set(nums.map(n => n & mask));\n    const candidate = max | (1 << i);\n    for (const p of prefixes)\n      if (prefixes.has(p ^ candidate)) { max = candidate; break; }\n  }\n  return max;\n}\n\nconsole.log(findMaximumXOR([3,10,5,25,2,8])); // 28\nconsole.log(findMaximumXOR([5,25,30]));        // 31`,
+        python: `def find_maximum_xor(nums):\n    max_xor = mask = 0\n    for i in range(31,-1,-1):\n        mask |= 1<<i\n        prefixes = {n & mask for n in nums}\n        candidate = max_xor | (1<<i)\n        if any((candidate^p) in prefixes for p in prefixes):\n            max_xor = candidate\n    return max_xor`,
+        java: `import java.util.*;\npublic class Main {\n    public static int findMaximumXOR(int[] nums) {\n        int max=0,mask=0;\n        for(int i=31;i>=0;i--){\n            mask|=(1<<i);\n            Set<Integer> p=new HashSet<>();\n            for(int n:nums) p.add(n&mask);\n            int cand=max|(1<<i);\n            for(int prefix:p) if(p.contains(prefix^cand)){max=cand;break;}\n        }\n        return max;\n    }\n}`,
+        cpp: `#include <bits/stdc++.h>\nusing namespace std;\nint findMaximumXOR(vector<int>& nums){\n    int maxXor=0,mask=0;\n    for(int i=31;i>=0;i--){\n        mask|=(1<<i);\n        unordered_set<int> p;\n        for(int n:nums) p.insert(n&mask);\n        int cand=maxXor|(1<<i);\n        for(int prefix:p) if(p.count(prefix^cand)){maxXor=cand;break;}\n    }\n    return maxXor;\n}`
+      }
+    }
+  ]
+};
+
+const LANGUAGES = [
+  { id: "javascript", name: "JavaScript", ext: "js" },
+  { id: "python", name: "Python 3", ext: "py" },
+  { id: "java", name: "Java", ext: "java" },
+  { id: "cpp", name: "C++17", ext: "cpp" },
+];
+
+const DIFF_CONFIG = {
+  easy:   { label: "Easy",   color: "#16a34a", bg: "#dcfce7", border: "#bbf7d0" },
+  medium: { label: "Medium", color: "#d97706", bg: "#fef9c3", border: "#fde68a" },
+  hard:   { label: "Hard",   color: "#dc2626", bg: "#fee2e2", border: "#fecaca" },
+};
+
+// ─── HOOKS ───────────────────────────────────────────────────────────────────
+
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
+// ─── MINI COMPONENTS ─────────────────────────────────────────────────────────
+
+function DiffBadge({ level }) {
+  const c = DIFF_CONFIG[level];
+  return (
+    <span style={{
+      background: c.bg, color: c.color, border: `1px solid ${c.border}`,
+      borderRadius: 6, padding: "2px 10px", fontSize: 11, fontWeight: 700,
+      letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: "monospace"
+    }}>{c.label}</span>
+  );
+}
+
+function Spinner({ size = 16 }) {
+  return (
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+      style={{
+        width: size, height: size, border: `2px solid rgba(79,70,229,0.2)`,
+        borderTopColor: "#4F46E5", borderRadius: "50%", display: "inline-block"
+      }}
+    />
+  );
+}
+
+// ─── SIMPLE CODE EDITOR (textarea-based, no CodeMirror dep needed in artifact) ─
+function SimpleEditor({ value, onChange, language, readOnly }) {
+  const lineCount = (value.match(/\n/g) || []).length + 1;
+  const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
+
+  return (
+    <div style={{ display: "flex", height: "100%", fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 13, lineHeight: "1.65" }}>
+      <div style={{
+        padding: "14px 10px", background: "#F8F5F0", color: "#94a3b8",
+        borderRight: "1px solid #E5E7EB", userSelect: "none", textAlign: "right",
+        minWidth: 42, fontSize: 12, lineHeight: "1.65", whiteSpace: "pre"
+      }}>
+        {lines.map(n => n + "\n").join("")}
+      </div>
+      <textarea
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        readOnly={readOnly}
+        spellCheck={false}
+        style={{
+          flex: 1, padding: "14px 16px", background: "#FFFFFF", color: "#0F172A",
+          border: "none", outline: "none", resize: "none", fontFamily: "inherit",
+          fontSize: "inherit", lineHeight: "inherit", whiteSpace: "pre", overflowX: "auto",
+          caretColor: "#4F46E5",
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+
+export default function CompetitiveEditor(props) {
+  const { value: propValue, onChange: propOnChange, language: propLanguage, showHeader = true, showLanguagePicker = true } = props || {};
+  const [difficulty, setDifficulty] = useState("easy");
+  const [questionIdx, setQuestionIdx] = useState(0);
+  const [language, setLanguage] = useState(propLanguage || "javascript");
+  const [code, setCode] = useState(typeof propValue === "string" ? propValue : "");
+  const [activeTab, setActiveTab] = useState("problem"); // problem | testcases | hints
+  const [outputTab, setOutputTab] = useState("output"); // output | dryrun
+  const [output, setOutput] = useState(null);
+  const [dryRun, setDryRun] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isDryRunning, setIsDryRunning] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [hintIdx, setHintIdx] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const questions = QUESTIONS[difficulty];
+  const question = questions[questionIdx];
+
+  // Sync code when question or language or external props change
+  useEffect(() => {
+    const defaultCode = question.defaultCode[language] || "";
+    if (typeof propValue !== "string") {
+      setCode(defaultCode);
+    }
+    setOutput(null);
+    setDryRun(null);
+    setShowHint(false);
+    setHintIdx(0);
+  }, [question.id, language]);
+
+  // Keep controlled prop in sync
+  useEffect(() => {
+    if (typeof propValue === "string" && propValue !== code) setCode(propValue);
+  }, [propValue]);
+
+  useEffect(() => {
+    if (propLanguage && propLanguage !== language) setLanguage(propLanguage);
+  }, [propLanguage]);
+
+  const debouncedCode = useDebounce(code, 400);
+
+  const handleRun = useCallback(async () => {
+    if (isRunning) return;
+    setIsRunning(true);
+    setOutput(null);
+    setOutputTab("output");
+    try {
+      // Prefer backend code-runner endpoint if available
+      const payload = {
+        language,
+        stdin: "",
+        files: [
+          { name: `solution.${LANGUAGES.find(l => l.id === language)?.ext || 'txt'}`, content: debouncedCode },
+        ],
+      };
+
+      let res = null;
+      try {
+        res = await fetch("/service/code-runner", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          credentials: "include",
+        });
+      } catch (backendErr) {
+        res = null;
+      }
+
+      if (res && res.ok) {
+        const data = await res.json();
+        setOutput({ success: true, text: JSON.stringify(data, null, 2) });
+      } else {
+        // Fallback: simulate via remote LLM (developer environment may not have backend)
+        const prompt = `You are a code execution engine. Given this ${language} code, simulate running it and provide the output exactly as it would appear in a terminal. Only show the output lines, no explanation.
+
+Code:
+\`\`\`${language}
+${debouncedCode}
+\`\`\`
+
+Respond with ONLY the program output. If there are errors, show the error message.`;
+
+        const r = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 1000,
+            messages: [{ role: "user", content: prompt }]
+          })
+        });
+        const data = await r.json();
+        const text = data.content?.find(b => b.type === "text")?.text || "No output";
+        setOutput({ success: true, text });
+      }
+    } catch (e) {
+      setOutput({ success: false, text: "Error: " + e.message });
+    } finally {
+      setIsRunning(false);
+    }
+  }, [isRunning, language, debouncedCode]);
+
+  const handleDryRun = useCallback(async () => {
+    if (isDryRunning) return;
+    setIsDryRunning(true);
+    setDryRun(null);
+    setOutputTab("dryrun");
+    try {
+      const prompt = `You are an expert code analyzer. Perform a detailed dry run / trace of this ${language} code for the problem: "${question.title}".
+
+Code:
+\`\`\`${language}
+${debouncedCode}
+\`\`\`
+
+Provide a step-by-step dry run using the first test case: ${question.testcases[0].input}
+
+Format your response as:
+STEP 1: [description]
+  Variables: [key variables and their values]
+STEP 2: ...
+...
+FINAL OUTPUT: [result]
+TIME COMPLEXITY: O(?)
+SPACE COMPLEXITY: O(?)
+
+Be concise but clear. Max 15 steps.`;
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content?.find(b => b.type === "text")?.text || "No analysis";
+      setDryRun({ text });
+    } catch (e) {
+      setDryRun({ text: "Error: " + e.message });
+    } finally {
+      setIsDryRunning(false);
+    }
+  }, [isDryRunning, language, debouncedCode, question]);
+
+  const anyLoading = isRunning || isDryRunning;
+
+  const handleCodeChange = (v) => {
+    setCode(v);
+    if (typeof propOnChange === "function") propOnChange(v);
+  };
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: "#F8F5F0", fontFamily: "'Geist','Inter',system-ui,sans-serif",
+      display: "flex", flexDirection: "column",
+    }}>
+      {/* ── TOP NAV ── */}
+      {showHeader && (
+        <div style={{
+          background: "#0f172a", borderBottom: "1px solid #1e293b",
+          padding: "0 20px", height: 52, display: "flex", alignItems: "center", gap: 16,
+          flexShrink: 0,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+              </svg>
+            </div>
+            <span style={{ color: "#f1f5f9", fontWeight: 700, fontSize: 15, letterSpacing: "-0.01em" }}>
+              CodeForge
+            </span>
+            <span style={{ color: "#475569", fontSize: 12, marginLeft: 4 }}>by Infosys</span>
+          </div>
+
+          <div style={{ flex: 1 }} />
+
+          {/* Difficulty tabs */}
+          <div style={{ display: "flex", gap: 4, background: "#1e293b", borderRadius: 8, padding: 3 }}>
+            {["easy","medium","hard"].map(d => (
+              <motion.button
+                key={d}
+                onClick={() => { setDifficulty(d); setQuestionIdx(0); }}
+                whileTap={{ scale: 0.96 }}
+                style={{
+                  padding: "5px 14px", borderRadius: 6, border: "none", cursor: "pointer",
+                  fontSize: 12, fontWeight: 600, letterSpacing: "0.03em", textTransform: "capitalize",
+                  background: difficulty === d ? DIFF_CONFIG[d].bg : "transparent",
+                  color: difficulty === d ? DIFF_CONFIG[d].color : "#64748b",
+                  transition: "all 0.18s",
+                }}
+              >{d}</motion.button>
+            ))}
+          </div>
+
+          {/* Language picker */}
+            {showLanguagePicker && (
+              <select
+                value={language}
+                onChange={e => setLanguage(e.target.value)}
+                style={{
+                  background: "#1e293b", color: "#e2e8f0", border: "1px solid #334155",
+                  borderRadius: 7, padding: "5px 10px", fontSize: 12, cursor: "pointer", outline: "none",
+                }}
+              >
+                {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            )}
+        </div>
+      )}
+
+      {/* ── QUESTION SELECTOR ── */}
+      {showHeader && (
+        <div style={{
+          background: "#F1ECE6", borderBottom: "1px solid #E5E7EB",
+          padding: "8px 20px", display: "flex", gap: 8, overflowX: "auto", flexShrink: 0,
+        }}>
+          {questions.map((q, i) => (
+            <motion.button
+              key={q.id}
+              onClick={() => { setQuestionIdx(i); setOutput(null); setDryRun(null); }}
+              whileTap={{ scale: 0.97 }}
+              style={{
+                padding: "6px 16px", borderRadius: 8, border: "1px solid",
+                borderColor: questionIdx === i ? "#6366f1" : "#E5E7EB",
+                background: questionIdx === i ? "#ede9fe" : "#FFFFFF",
+                color: questionIdx === i ? "#4338ca" : "#475569",
+                fontSize: 12, fontWeight: questionIdx === i ? 700 : 500,
+                cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s",
+              }}
+            >
+              Q{i+1}. {q.title}
+            </motion.button>
+          ))}
+        </div>
+      )}
+
+      {/* ── MAIN LAYOUT ── */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
+
+        {/* LEFT PANEL */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 380, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              style={{
+                background: "#FFFFFF", borderRight: "1px solid #E5E7EB",
+                display: "flex", flexDirection: "column", overflow: "hidden", flexShrink: 0,
+              }}
+            >
+              {/* Tab bar */}
+              <div style={{
+                display: "flex", borderBottom: "1px solid #E5E7EB",
+                background: "#F8F5F0", flexShrink: 0,
+              }}>
+                {[
+                  { id: "problem", label: "Problem" },
+                  { id: "testcases", label: "Test Cases" },
+                  { id: "hints", label: "Hints" },
+                ].map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id)}
+                    style={{
+                      flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
+                      background: "transparent", fontSize: 12, fontWeight: 600,
+                      color: activeTab === t.id ? "#4338ca" : "#64748b",
+                      borderBottom: activeTab === t.id ? "2px solid #6366f1" : "2px solid transparent",
+                      transition: "all 0.15s",
+                    }}
+                  >{t.label}</button>
+                ))}
+              </div>
+
+              <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
+                <AnimatePresence mode="wait">
+                  {activeTab === "problem" && (
+                    <motion.div
+                      key="problem"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                        <DiffBadge level={difficulty} />
+                        <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>{question.category}</span>
+                      </div>
+                      <h2 style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", margin: "0 0 12px", lineHeight: 1.3 }}>
+                        {question.title}
+                      </h2>
+                      <p style={{ fontSize: 13.5, color: "#334155", lineHeight: 1.7, margin: 0 }}>
+                        {question.description}
+                      </p>
+
+                      {/* Example */}
+                      <div style={{ marginTop: 20 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                          Example
+                        </div>
+                        <div style={{
+                          background: "#F8F5F0", borderRadius: 10, padding: 14,
+                          border: "1px solid #E5E7EB", fontFamily: "monospace", fontSize: 12,
+                        }}>
+                          <div><span style={{ color: "#6366f1", fontWeight: 700 }}>Input:</span>{" "}
+                            <span style={{ color: "#0f172a" }}>{question.testcases[0].input}</span></div>
+                          <div style={{ marginTop: 6 }}><span style={{ color: "#16a34a", fontWeight: 700 }}>Output:</span>{" "}
+                            <span style={{ color: "#0f172a" }}>{question.testcases[0].output}</span></div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === "testcases" && (
+                    <motion.div
+                      key="testcases"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
+                        Test Cases
+                      </div>
+                      {question.testcases.map((tc, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          style={{
+                            background: "#F8F5F0", borderRadius: 10, padding: 14,
+                            border: "1px solid #E5E7EB", marginBottom: 10,
+                            fontFamily: "monospace", fontSize: 12,
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                            <span style={{
+                              background: "#ede9fe", color: "#4338ca", borderRadius: 5,
+                              padding: "1px 8px", fontSize: 10, fontWeight: 700,
+                            }}>#{i+1}</span>
+                          </div>
+                          <div><span style={{ color: "#6366f1", fontWeight: 700 }}>Input:</span>{" "}
+                            <span style={{ color: "#0f172a" }}>{tc.input}</span></div>
+                          <div style={{ marginTop: 5 }}><span style={{ color: "#16a34a", fontWeight: 700 }}>Expected:</span>{" "}
+                            <span style={{ color: "#0f172a" }}>{tc.output}</span></div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+
+                  {activeTab === "hints" && (
+                    <motion.div
+                      key="hints"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>
+                        Hints
+                      </div>
+                      {question.hints.map((hint, i) => (
+                        <div key={i} style={{ marginBottom: 12 }}>
+                          {i <= hintIdx ? (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              style={{
+                                background: i === 0 ? "#eff6ff" : "#faf5ff",
+                                border: `1px solid ${i === 0 ? "#bfdbfe" : "#e9d5ff"}`,
+                                borderRadius: 10, padding: 14,
+                              }}
+                            >
+                              <div style={{ fontSize: 11, fontWeight: 700, color: i===0?"#3b82f6":"#7c3aed", marginBottom: 6 }}>
+                                Hint {i + 1}
+                              </div>
+                              <p style={{ fontSize: 13, color: "#334155", margin: 0, lineHeight: 1.6 }}>{hint}</p>
+                            </motion.div>
+                          ) : (
+                            <div style={{
+                              background: "#F8F5F0", border: "1px dashed #E5E7EB",
+                              borderRadius: 10, padding: 14, cursor: "pointer",
+                              display: "flex", alignItems: "center", gap: 10,
+                            }}
+                              onClick={() => setHintIdx(i)}
+                            >
+                              <div style={{
+                                width: 28, height: 28, borderRadius: "50%",
+                                background: "#ede9fe", color: "#6366f1",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                fontSize: 14, fontWeight: 700, flexShrink: 0,
+                              }}>?</div>
+                              <span style={{ fontSize: 13, color: "#94a3b8" }}>Click to reveal Hint {i+1}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Toggle sidebar */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          style={{
+            width: 20, background: "#F1ECE6", border: "none", borderRight: "1px solid #E5E7EB",
+            cursor: "pointer", color: "#94a3b8", fontSize: 10, flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+          title={sidebarOpen ? "Hide panel" : "Show panel"}
+        >
+          {sidebarOpen ? "◀" : "▶"}
+        </button>
+
+        {/* RIGHT PANEL: Editor + Output */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+          {/* Editor header */}
+          <div style={{
+            height: 44, background: "#F8F5F0", borderBottom: "1px solid #E5E7EB",
+            display: "flex", alignItems: "center", padding: "0 16px", gap: 12, flexShrink: 0,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#475569", fontSize: 12, fontWeight: 600 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round">
+                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+              </svg>
+              Solution.{LANGUAGES.find(l=>l.id===language)?.ext}
+            </div>
+            <div style={{ flex: 1 }} />
+
+            {/* Run button */}
+            <motion.button
+              onClick={handleDryRun}
+              disabled={anyLoading}
+              whileTap={!anyLoading ? { scale: 0.96 } : {}}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "6px 14px", borderRadius: 8,
+                background: anyLoading ? "#f1f5f9" : "#F8F5F0",
+                border: "1px solid #E5E7EB",
+                color: anyLoading ? "#94a3b8" : "#334155",
+                fontSize: 12, fontWeight: 600, cursor: anyLoading ? "not-allowed" : "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              {isDryRunning ? <Spinner size={13} /> : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              )}
+              Dry Run
+            </motion.button>
+
+            <motion.button
+              onClick={handleRun}
+              disabled={anyLoading}
+              whileTap={!anyLoading ? { scale: 0.96 } : {}}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "6px 16px", borderRadius: 8,
+                background: anyLoading ? "#c7d2fe" : "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                border: "none",
+                color: "#fff", fontSize: 12, fontWeight: 700,
+                cursor: anyLoading ? "not-allowed" : "pointer",
+                boxShadow: anyLoading ? "none" : "0 4px 12px rgba(79,70,229,0.28)",
+                transition: "all 0.15s", opacity: anyLoading ? 0.75 : 1,
+              }}
+            >
+              {isRunning ? <Spinner size={13} /> : (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                  <polygon points="5,3 19,12 5,21"/>
+                </svg>
+              )}
+              {isRunning ? "Running…" : "Run Code"}
+            </motion.button>
+
+            {questionIdx > 0 && (
+              <motion.button
+                onClick={() => {
+                  setQuestionIdx(questionIdx - 1);
+                  setOutput(null);
+                  setDryRun(null);
+                }}
+                whileTap={{ scale: 0.96 }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "6px 16px", borderRadius: 8,
+                  background: "#e2e8f0",
+                  border: "none",
+                  color: "#334155", fontSize: 12, fontWeight: 700,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  marginLeft: 8
+                }}
+              >
+                Previous
+              </motion.button>
+            )}
+
+            <motion.button
+              onClick={() => {
+                if (questionIdx < questions.length - 1) {
+                  setQuestionIdx(questionIdx + 1);
+                  setOutput(null);
+                  setDryRun(null);
+                } else {
+                  if (typeof props.onSubmit === "function") {
+                    props.onSubmit(code);
+                  }
+                }
+              }}
+              whileTap={{ scale: 0.96 }}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "6px 16px", borderRadius: 8,
+                background: "#16a34a",
+                border: "none",
+                color: "#fff", fontSize: 12, fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(22,163,74,0.28)",
+                transition: "all 0.15s",
+                marginLeft: 8
+              }}
+            >
+              {questionIdx < questions.length - 1 ? "Next Question" : "Submit Code"}
+            </motion.button>
+          </div>
+
+          {/* Editor area */}
+          <div style={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
+            <SimpleEditor
+              value={code}
+              onChange={handleCodeChange}
+              language={language}
+              readOnly={anyLoading}
+            />
+          </div>
+
+          {/* Output panel */}
+          <AnimatePresence>
+            {(output || dryRun || isRunning || isDryRunning) && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 240, opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.22, ease: [0.4,0,0.2,1] }}
+                style={{
+                  background: "#0f172a", borderTop: "1px solid #1e293b",
+                  display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden",
+                }}
+              >
+                {/* Output tab bar */}
+                <div style={{
+                  display: "flex", alignItems: "center", borderBottom: "1px solid #1e293b",
+                  padding: "0 16px", height: 38, gap: 4, flexShrink: 0,
+                }}>
+                  {[
+                    { id: "output", label: "Output" },
+                    { id: "dryrun", label: "Dry Run Analysis" },
+                  ].map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => setOutputTab(t.id)}
+                      style={{
+                        padding: "4px 12px", border: "none", cursor: "pointer",
+                        background: "transparent", fontSize: 11, fontWeight: 600,
+                        color: outputTab === t.id ? "#a5b4fc" : "#475569",
+                        borderBottom: outputTab === t.id ? "2px solid #6366f1" : "2px solid transparent",
+                        transition: "all 0.15s",
+                      }}
+                    >{t.label}</button>
+                  ))}
+                  <div style={{ flex: 1 }} />
+                  <button
+                    onClick={() => { setOutput(null); setDryRun(null); }}
+                    style={{ background: "none", border: "none", color: "#475569", cursor: "pointer", fontSize: 16, lineHeight: 1 }}
+                  >×</button>
+                </div>
+
+                {/* Output content */}
+                <div style={{
+                  flex: 1, overflowY: "auto", padding: 16,
+                  fontFamily: "'JetBrains Mono','Fira Code',monospace", fontSize: 12,
+                  color: "#e2e8f0", lineHeight: 1.7,
+                }}>
+                  <AnimatePresence mode="wait">
+                    {outputTab === "output" && (
+                      <motion.div
+                        key="out"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        {isRunning ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#94a3b8" }}>
+                            <Spinner size={14} />
+                            <span>Executing code…</span>
+                          </div>
+                        ) : output ? (
+                          <div>
+                            <div style={{ color: "#64748b", fontSize: 10, marginBottom: 8 }}>
+                              ▶ OUTPUT
+                            </div>
+                            <pre style={{
+                              margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word",
+                              color: output.success ? "#86efac" : "#f87171"
+                            }}>{output.text}</pre>
+                          </div>
+                        ) : (
+                          <span style={{ color: "#475569" }}>Press Run Code to see output</span>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {outputTab === "dryrun" && (
+                      <motion.div
+                        key="dry"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        {isDryRunning ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#94a3b8" }}>
+                            <Spinner size={14} />
+                            <span>Analyzing code trace…</span>
+                          </div>
+                        ) : dryRun ? (
+                          <div>
+                            <div style={{ color: "#64748b", fontSize: 10, marginBottom: 8 }}>
+                              ▶ DRY RUN — {question.testcases[0].input}
+                            </div>
+                            <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", color: "#c4b5fd" }}>
+                              {dryRun.text}
+                            </pre>
+                          </div>
+                        ) : (
+                          <span style={{ color: "#475569" }}>Press Dry Run to trace execution</span>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
+}

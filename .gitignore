@@ -1,0 +1,6 @@
+node_modules
+dist
+.env
+eng.traineddata
+note.txt
+vercel.json
